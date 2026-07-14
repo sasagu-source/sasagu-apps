@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASAGU — Smart Logistics Cost Calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5.0.22/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/index.css">
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --bg-2:#0f1424;
+    --surface:#141a2e;
+    --surface-2:#1a2140;
+    --surface-3:#222a4e;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.14);
+    --text:#f5f7fb;
+    --text-2:#a8b0c7;
+    --text-3:#6b7393;
+    --primary:#6366f1;
+    --primary-2:#8b5cf6;
+    --accent:#10b981;
+    --accent-2:#06b6d4;
+    --gold:#fbbf24;
+    --danger:#ef4444;
+    --warning:#f59e0b;
+    --success:#10b981;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow-lg:0 20px 60px rgba(0,0,0,0.4);
+    --shadow-glow:0 0 60px rgba(99,102,241,0.15);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* Animated mesh background */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(99,102,241,0.18), transparent 50%),
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(16,185,129,0.12), transparent 50%),
+      radial-gradient(ellipse 70% 60% at 50% 100%, rgba(139,92,246,0.14), transparent 55%);
+    z-index:0;
+    pointer-events:none;
+    animation:meshShift 20s ease-in-out infinite alternate;
+  }
+  @keyframes meshShift{
+    0%{transform:translate(0,0) scale(1)}
+    100%{transform:translate(-2%,2%) scale(1.05)}
+  }
+  /* Subtle noise */
+  body::after{
+    content:"";
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity:.03;
+    z-index:0;
+    pointer-events:none;
+    mix-blend-mode:overlay;
+  }
+
+  /* NAVBAR */
+  .navbar{
+    position:sticky;top:0;z-index:100;
+    backdrop-filter:blur(20px) saturate(180%);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    background:rgba(10,14,26,0.7);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1320px;margin:0 auto;
+    padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:42px;height:42px;border-radius:12px;
+    background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 50%,var(--accent) 100%);
+    display:grid;place-items:center;
+    box-shadow:0 8px 24px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    position:relative;
+    overflow:hidden;
+  }
+  .brand-mark::after{
+    content:"";
+    position:absolute;inset:0;
+    background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,0.3) 50%,transparent 60%);
+    animation:shine 3s ease-in-out infinite;
+  }
+  @keyframes shine{
+    0%,100%{transform:translateX(-100%)}
+    50%{transform:translateX(100%)}
+  }
+  .brand-mark svg{width:22px;height:22px;color:#fff;position:relative;z-index:2}
+  .brand-text{display:flex;flex-direction:column;line-height:1}
+  .brand-name{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.35rem;font-weight:800;
+    letter-spacing:-.02em;
+    background:linear-gradient(135deg,#fff 0%,#a8b0c7 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .brand-tag{
+    font-size:.68rem;color:var(--text-3);
+    letter-spacing:.18em;text-transform:uppercase;
+    margin-top:3px;font-weight:500;
+  }
+  .nav-right{display:flex;align-items:center;gap:14px}
+  .nav-status{
+    display:flex;align-items:center;gap:8px;
+    padding:7px 14px;border-radius:999px;
+    background:rgba(16,185,129,0.1);
+    border:1px solid rgba(16,185,129,0.25);
+    font-size:.78rem;color:var(--accent);font-weight:600;
+  }
+  .nav-status .pulse{
+    width:7px;height:7px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 0 rgba(16,185,129,0.7);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(16,185,129,0.7)}
+    70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}
+    100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;z-index:1;
+    max-width:1320px;margin:0 auto;
+    padding:60px 24px 40px;
+  }
+  .hero-grid{
+    display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center;
+  }
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 14px;border-radius:999px;
+    background:rgba(99,102,241,0.1);
+    border:1px solid rgba(99,102,241,0.25);
+    font-size:.78rem;color:#a5b4fc;font-weight:600;
+    margin-bottom:20px;
+  }
+  .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:pulse 2s infinite}
+  .hero h1{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:clamp(2.2rem,5vw,3.6rem);
+    font-weight:800;
+    letter-spacing:-.03em;
+    line-height:1.05;
+    margin-bottom:18px;
+  }
+  .hero h1 .grad{
+    background:linear-gradient(135deg,#818cf8 0%,#a78bfa 40%,#34d399 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .hero p{
+    font-size:1.05rem;color:var(--text-2);
+    max-width:540px;margin-bottom:28px;
+  }
+  .hero-stats{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+    max-width:500px;
+  }
+  .hero-stat{
+    padding:14px 16px;border-radius:14px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--border);
+    backdrop-filter:blur(10px);
+  }
+  .hero-stat .num{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.4rem;font-weight:800;
+    background:linear-gradient(135deg,#fff,#a8b0c7);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .hero-stat .lbl{font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+  /* Hero visual */
+  .hero-visual{
+    position:relative;
+    height:340px;
+    display:grid;place-items:center;
+  }
+  .hero-card{
+    position:absolute;
+    border-radius:20px;
+    backdrop-filter:blur(20px);
+    background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.08));
+    border:1px solid rgba(255,255,255,0.12);
+    padding:16px 18px;
+    box-shadow:var(--shadow-lg);
+    animation:float 6s ease-in-out infinite;
+  }
+  .hero-card.c1{top:10%;left:5%;width:200px;animation-delay:0s}
+  .hero-card.c2{top:45%;right:5%;width:220px;animation-delay:-2s}
+  .hero-card.c3{bottom:5%;left:20%;width:210px;animation-delay:-4s}
+  @keyframes float{
+    0%,100%{transform:translateY(0) rotate(0deg)}
+    50%{transform:translateY(-14px) rotate(1deg)}
+  }
+  .hero-card .hc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .hero-card .hc-icn{
+    width:32px;height:32px;border-radius:9px;
+    display:grid;place-items:center;font-size:16px;
+    background:rgba(255,255,255,0.08);
+  }
+  .hero-card .hc-tag{
+    font-size:.65rem;padding:3px 8px;border-radius:6px;
+    background:rgba(16,185,129,0.15);color:#6ee7b7;font-weight:600;
+  }
+  .hero-card .hc-val{font-family:'Plus Jakarta Sans',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:2px}
+  .hero-card .hc-lbl{font-size:.72rem;color:var(--text-2)}
+
+  /* MAIN CONTAINER */
+  .main{
+    position:relative;z-index:1;
+    max-width:1320px;margin:0 auto;
+    padding:0 24px 60px;
+  }
+
+  /* MODE TOGGLE */
+  .mode-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:18px 22px;border-radius:20px;
+    background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+    border:1px solid var(--border);
+    backdrop-filter:blur(20px);
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .mode-info{display:flex;align-items:center;gap:16px}
+  .mode-icn{
+    width:48px;height:48px;border-radius:14px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.1));
+    border:1px solid rgba(99,102,241,0.3);
+    font-size:22px;
+  }
+  .mode-icn.advance{
+    background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(6,182,212,0.1));
+    border-color:rgba(16,185,129,0.3);
+  }
+  .mode-text strong{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.05rem;font-weight:700;display:block;
+  }
+  .mode-text small{color:var(--text-3);font-size:.82rem}
+  .switch{position:relative;width:62px;height:34px;cursor:pointer;flex-shrink:0}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{
+    position:absolute;inset:0;
+    background:var(--surface-2);
+    border:1px solid var(--border-strong);
+    border-radius:999px;transition:.3s;
+  }
+  .slider::before{
+    content:"";position:absolute;height:26px;width:26px;left:3px;top:3px;
+    background:linear-gradient(135deg,#fff,#e5e7eb);
+    border-radius:50%;transition:.3s;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  }
+  .switch input:checked+.slider{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    border-color:rgba(16,185,129,0.5);
+  }
+  .switch input:checked+.slider::before{transform:translateX(28px)}
+
+  /* BENTO GRID */
+  .bento{
+    display:grid;gap:18px;
+    grid-template-columns:repeat(6,1fr);
+    margin-bottom:28px;
+  }
+  .bento .card{grid-column:span 3}
+  .bento .card.wide{grid-column:span 6}
+  .bento .card.narrow{grid-column:span 2}
+  @media(max-width:900px){
+    .bento .card,.bento .card.wide,.bento .card.narrow{grid-column:span 6}
+    .hero-grid{grid-template-columns:1fr}
+    .hero-visual{height:280px;margin-top:20px}
+  }
+
+  .card{
+    background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    backdrop-filter:blur(20px);
+    transition:.3s;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+  }
+  .card:hover{
+    border-color:var(--border-strong);
+    transform:translateY(-2px);
+    box-shadow:var(--shadow-glow);
+  }
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;padding-bottom:14px;
+    border-bottom:1px solid var(--border);
+  }
+  .card-title{display:flex;align-items:center;gap:12px}
+  .card-title .icn{
+    width:38px;height:38px;border-radius:11px;
+    display:grid;place-items:center;font-size:18px;
+    background:linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,92,246,0.08));
+    border:1px solid rgba(99,102,241,0.25);
+  }
+  .card-title .icn.green{background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(6,182,212,0.08));border-color:rgba(16,185,129,0.25)}
+  .card-title .icn.amber{background:linear-gradient(135deg,rgba(251,191,36,0.18),rgba(245,158,11,0.08));border-color:rgba(251,191,36,0.25)}
+  .card-title .icn.rose{background:linear-gradient(135deg,rgba(244,63,94,0.18),rgba(239,68,68,0.08));border-color:rgba(244,63,94,0.25)}
+  .card-title h3{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:.98rem;font-weight:700;letter-spacing:-.01em;
+  }
+  .card-title small{display:block;font-size:.72rem;color:var(--text-3);font-weight:500;margin-top:2px}
+  .card-tag{
+    font-size:.68rem;padding:4px 10px;border-radius:999px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--border);
+    color:var(--text-2);font-weight:600;
+    letter-spacing:.04em;text-transform:uppercase;
+  }
+
+  .field{margin-bottom:14px}
+  .field label{
+    display:block;font-size:.72rem;font-weight:600;
+    color:var(--text-2);margin-bottom:6px;
+    text-transform:uppercase;letter-spacing:.08em;
+  }
+  .field input,.field select{
+    width:100%;padding:11px 14px;
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    color:var(--text);font-size:.92rem;font-family:inherit;
+    transition:.2s;
+  }
+  .field input::placeholder{color:var(--text-3)}
+  .field input:focus,.field select:focus{
+    outline:none;border-color:var(--primary);
+    background:rgba(99,102,241,0.08);
+    box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+  }
+  .field select{
+    appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8b0c7' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
+  }
+  .field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+  .field .hint{font-size:.7rem;color:var(--text-3);margin-top:4px;display:flex;align-items:center;gap:4px}
+
+  .advance-only{display:none}
+  .advance-only.show{display:block;animation:fadeUp .4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  /* CALC BUTTON */
+  .btn-calc{
+    width:100%;padding:18px 24px;
+    background:linear-gradient(135deg,var(--primary) 0%,var(--primary-2) 50%,var(--accent) 100%);
+    color:#fff;border:none;border-radius:var(--radius);
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.02rem;font-weight:700;cursor:pointer;
+    box-shadow:0 10px 30px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition:.25s;margin-bottom:40px;
+    display:flex;align-items:center;justify-content:center;gap:12px;
+    letter-spacing:-.01em;
+    position:relative;overflow:hidden;
+  }
+  .btn-calc::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+    transform:translateX(-100%);transition:.6s;
+  }
+  .btn-calc:hover::before{transform:translateX(100%)}
+  .btn-calc:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(99,102,241,0.5)}
+  .btn-calc:active{transform:translateY(0)}
+  .btn-calc .kbd{
+    font-size:.68rem;padding:3px 8px;border-radius:6px;
+    background:rgba(255,255,255,0.15);
+    font-family:'JetBrains Mono',monospace;font-weight:600;
+  }
+
+  /* OUTPUT */
+  .output-section{margin-top:10px}
+  .output-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:22px;flex-wrap:wrap;gap:12px;
+  }
+  .output-header h2{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.5rem;font-weight:800;letter-spacing:-.02em;
+    display:flex;align-items:center;gap:12px;
+  }
+  .output-header h2 .bar{
+    width:5px;height:28px;border-radius:3px;
+    background:linear-gradient(180deg,var(--primary),var(--accent));
+  }
+  .output-header .meta{font-size:.82rem;color:var(--text-3)}
+
+  .scenario{
+    background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:24px;margin-bottom:18px;
+    backdrop-filter:blur(20px);
+    position:relative;overflow:hidden;
+    transition:.3s;
+  }
+  .scenario::before{
+    content:"";position:absolute;top:0;left:0;width:4px;height:100%;
+    background:linear-gradient(180deg,var(--primary),var(--primary-2));
+  }
+  .scenario.s1::before{background:linear-gradient(180deg,#06b6d4,#3b82f6)}
+  .scenario.s2::before{background:linear-gradient(180deg,#10b981,#34d399)}
+  .scenario.s3::before{background:linear-gradient(180deg,#f59e0b,#fbbf24)}
+  .scenario:hover{border-color:var(--border-strong);transform:translateX(4px)}
+
+  .scenario-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+  .scenario-title{display:flex;align-items:center;gap:12px}
+  .scenario-num{
+    width:38px;height:38px;border-radius:11px;
+    display:grid;place-items:center;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:800;font-size:.95rem;
+    background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.1));
+    border:1px solid rgba(99,102,241,0.3);
+  }
+  .scenario.s1 .scenario-num{background:linear-gradient(135deg,rgba(6,182,212,0.2),rgba(59,130,246,0.1));border-color:rgba(6,182,212,0.3)}
+  .scenario.s2 .scenario-num{background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(52,211,153,0.1));border-color:rgba(16,185,129,0.3)}
+  .scenario.s3 .scenario-num{background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.1));border-color:rgba(245,158,11,0.3)}
+  .scenario-title h4{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.02rem;font-weight:700;
+  }
+  .scenario-title small{display:block;font-size:.75rem;color:var(--text-3);margin-top:2px}
+  .badge{
+    font-size:.68rem;padding:4px 10px;border-radius:999px;
+    background:rgba(99,102,241,0.15);color:#a5b4fc;
+    font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    border:1px solid rgba(99,102,241,0.25);
+  }
+  .badge.cyan{background:rgba(6,182,212,0.15);color:#67e8f9;border-color:rgba(6,182,212,0.25)}
+  .badge.green{background:rgba(16,185,129,0.15);color:#6ee7b7;border-color:rgba(16,185,129,0.25)}
+  .badge.amber{background:rgba(245,158,11,0.15);color:#fcd34d;border-color:rgba(245,158,11,0.25)}
+
+  .result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+  .result-item{
+    padding:14px;border-radius:12px;
+    background:rgba(0,0,0,0.25);
+    border:1px solid var(--border);
+    transition:.2s;
+  }
+  .result-item:hover{border-color:var(--border-strong);background:rgba(0,0,0,0.35)}
+  .result-item .lbl{
+    font-size:.68rem;color:var(--text-3);
+    text-transform:uppercase;letter-spacing:.08em;font-weight:600;
+  }
+  .result-item .val{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.05rem;font-weight:700;color:var(--text);
+    margin-top:4px;
+  }
+  .result-item .val.big{
+    font-size:1.3rem;
+    background:linear-gradient(135deg,#fff,#a8b0c7);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .result-item.highlight{
+    background:linear-gradient(135deg,rgba(251,191,36,0.15),rgba(245,158,11,0.05));
+    border-color:rgba(251,191,36,0.3);
+    grid-column:span 2;
+  }
+  @media(max-width:600px){.result-item.highlight{grid-column:span 1}}
+  .result-item.highlight .lbl{color:#fcd34d}
+  .result-item.highlight .val{
+    font-size:1.5rem;
+    background:linear-gradient(135deg,#fcd34d,#fbbf24);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .alert{
+    padding:14px 16px;border-radius:12px;margin-top:14px;
+    font-size:.88rem;display:flex;align-items:flex-start;gap:12px;
+    border:1px solid;
+  }
+  .alert.danger{background:rgba(239,68,68,0.08);color:#fca5a5;border-color:rgba(239,68,68,0.25)}
+  .alert.success{background:rgba(16,185,129,0.08);color:#6ee7b7;border-color:rgba(16,185,129,0.25)}
+  .alert.info{background:rgba(59,130,246,0.08);color:#93c5fd;border-color:rgba(59,130,246,0.25)}
+  .alert.warning{background:rgba(245,158,11,0.08);color:#fcd34d;border-color:rgba(245,158,11,0.25)}
+  .alert strong{color:inherit}
+
+  .empty-state{
+    text-align:center;padding:60px 24px;
+    background:linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+    border:1px dashed var(--border-strong);
+    border-radius:var(--radius);
+  }
+  .empty-state .big-icon{
+    width:72px;height:72px;margin:0 auto 16px;
+    border-radius:20px;
+    background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.08));
+    border:1px solid rgba(99,102,241,0.25);
+    display:grid;place-items:center;font-size:32px;
+  }
+  .empty-state h3{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-size:1.2rem;margin-bottom:8px;
+  }
+  .empty-state p{color:var(--text-3);font-size:.92rem;max-width:420px;margin:0 auto}
+
+  /* FOOTER */
+  footer{
+    position:relative;z-index:1;
+    border-top:1px solid var(--border);
+    padding:30px 24px;text-align:center;
+    color:var(--text-3);font-size:.82rem;
+  }
+  footer .brand-mini{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:800;color:var(--text);margin-bottom:6px;
+  }
+  footer .brand-mini .mini-mark{
+    width:22px;height:22px;border-radius:6px;
+    background:linear-gradient(135deg,var(--primary),var(--accent));
+    display:grid;place-items:center;
+  }
+  footer .brand-mini .mini-mark svg{width:12px;height:12px;color:#fff}
+
+  @media(max-width:640px){
+    .hero{padding:40px 18px 24px}
+    .main{padding:0 14px 40px}
+    .hero-stats{grid-template-columns:1fr 1fr}
+    .nav-status{display:none}
+    .card{padding:18px}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">SASAGU</span>
+        <span class="brand-tag">Logistics Cost Engine</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-status">
+        <span class="pulse"></span>
+        <span>System Ready</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-badge">
+        <span class="dot"></span>
+        <span>v2.0 — Smart Cost Optimization</span>
+      </div>
+      <h1>Hitung <span class="grad">Landed Cost</span><br>paling efisien untuk bisnis Anda.</h1>
+      <p>SASAGU membantu UMKM hingga manufaktur menghitung HPP logistik secara presisi — dari ongkir, packaging, hingga biaya siluman pelabuhan.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num">3</div>
+          <div class="lbl">Skenario</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">2</div>
+          <div class="lbl">Mode</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">∞</div>
+          <div class="lbl">Efisiensi</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card c1">
+        <div class="hc-top">
+          <div class="hc-icn">📦</div>
+          <div class="hc-tag">OPTIMAL</div>
+        </div>
+        <div class="hc-val">Rp 12.450</div>
+        <div class="hc-lbl">Unit Cost per Pcs</div>
+      </div>
+      <div class="hero-card c2">
+        <div class="hc-top">
+          <div class="hc-icn">🚢</div>
+          <div class="hc-tag">Laut</div>
+        </div>
+        <div class="hc-val">4000</div>
+        <div class="hc-lbl">Volumetric Divisor</div>
+      </div>
+      <div class="hero-card c3">
+        <div class="hc-top">
+          <div class="hc-icn">⚡</div>
+          <div class="hc-tag">HEMAT 18%</div>
+        </div>
+        <div class="hc-val">Master Box</div>
+        <div class="hc-lbl">Rekomendasi Terbaik</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- MODE TOGGLE -->
+  <div class="mode-bar">
+    <div class="mode-info">
+      <div class="mode-icn" id="modeIcn">🏪</div>
+      <div class="mode-text">
+        <strong id="modeTitle">Mode Basic — UMKM</strong>
+        <small id="modeSub">Perhitungan dasar untuk UMKM &amp; reseller</small>
+      </div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="modeToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- INPUTS BENTO -->
+  <div class="bento">
+
+    <!-- Pengiriman -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn">🚢</div>
+          <div>
+            <h3>Mode Pengiriman</h3>
+            <small>Ekspedisi &amp; tarif dasar</small>
+          </div>
+        </div>
+        <span class="card-tag">01</span>
+      </div>
+      <div class="field">
+        <label>Jenis Pengiriman</label>
+        <select id="shipMode">
+          <option value="4000">🚢 Laut (pembagi 4000)</option>
+          <option value="6000">✈️ Udara (pembagi 6000)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Harga Ekspedisi per Kg (Rp)</label>
+        <input type="number" id="pricePerKg" placeholder="contoh: 35000" min="0">
+      </div>
+      <div class="field">
+        <label>Minimal Berat Pengiriman (kg)</label>
+        <input type="number" id="minWeight" placeholder="contoh: 50" min="0" step="0.1">
+      </div>
+    </div>
+
+    <!-- Produk Satuan -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn green">📐</div>
+          <div>
+            <h3>Data Produk Satuan</h3>
+            <small>Dimensi &amp; berat per pcs</small>
+          </div>
+        </div>
+        <span class="card-tag">02</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Panjang (cm)</label><input type="number" id="uP" placeholder="0" min="0" step="0.1"></div>
+        <div class="field"><label>Lebar (cm)</label><input type="number" id="uL" placeholder="0" min="0" step="0.1"></div>
+        <div class="field"><label>Tinggi (cm)</label><input type="number" id="uT" placeholder="0" min="0" step="0.1"></div>
+      </div>
+      <div class="field">
+        <label>Berat Aktual + Kemasan (kg)</label>
+        <input type="number" id="uW" placeholder="0" min="0" step="0.01">
+        <div class="hint">💡 Berat produk beserta kemasan individual</div>
+      </div>
+    </div>
+
+    <!-- Master Box -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn amber">📦</div>
+          <div>
+            <h3>Data Master Box</h3>
+            <small>Kemasan kolektif &amp; kapasitas</small>
+          </div>
+        </div>
+        <span class="card-tag">03</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Panjang (cm)</label><input type="number" id="bP" placeholder="0" min="0" step="0.1"></div>
+        <div class="field"><label>Lebar (cm)</label><input type="number" id="bL" placeholder="0" min="0" step="0.1"></div>
+        <div class="field"><label>Tinggi (cm)</label><input type="number" id="bT" placeholder="0" min="0" step="0.1"></div>
+      </div>
+      <div class="field">
+        <label>Kapasitas Isi (pcs)</label>
+        <input type="number" id="bCap" placeholder="0" min="0">
+        <div class="hint">💡 Jumlah pcs produk dalam 1 master box</div>
+      </div>
+    </div>
+
+    <!-- Biaya Tambahan -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn rose">💰</div>
+          <div>
+            <h3>Biaya Tambahan</h3>
+            <small>Packaging, ongkir lokal &amp; asuransi</small>
+          </div>
+        </div>
+        <span class="card-tag">04</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Packaging (Rp)</label><input type="number" id="cPack" placeholder="0" min="0"></div>
+        <div class="field"><label>Ongkir Lokal Awal (Rp)</label><input type="number" id="cLocal1" placeholder="0" min="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Asuransi (Rp)</label><input type="number" id="cIns" placeholder="0" min="0"></div>
+        <div class="field"><label>Ongkir Lokal Tujuan (Rp)</label><input type="number" id="cLocal2" placeholder="0" min="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Biaya Packing Kayu (Rp)</label><input type="number" id="cWood" placeholder="0" min="0"></div>
+        <div class="field"><label>Berat Packing Kayu (kg)</label><input type="number" id="wWood" placeholder="0" min="0" step="0.01"></div>
+      </div>
+      <div class="field">
+        <label>Dimensi Packing Kayu (P × L × T cm)</label>
+        <div class="field-row">
+          <input type="number" id="kWdP" placeholder="P" min="0" step="0.1">
+          <input type="number" id="kWdL" placeholder="L" min="0" step="0.1">
+          <input type="number" id="kWdT" placeholder="T" min="0" step="0.1">
+        </div>
+        <div class="hint">💡 Kosongkan jika tidak menggunakan packing kayu</div>
+      </div>
+    </div>
+
+    <!-- ADVANCE -->
+    <div class="card advance-only">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn rose">⚠️</div>
+          <div>
+            <h3>Faktor Kerusakan</h3>
+            <small>Shrinkage rate manufaktur</small>
+          </div>
+        </div>
+        <span class="card-tag">ADV</span>
+      </div>
+      <div class="field">
+        <label>Shrinkage Rate (%)</label>
+        <input type="number" id="shrink" placeholder="contoh: 5" min="0" max="100" step="0.1">
+        <div class="hint">💡 Persentase produk rusak/hilang selama distribusi</div>
+      </div>
+    </div>
+
+    <div class="card advance-only">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn amber">🏭</div>
+          <div>
+            <h3>Biaya Siluman Pelabuhan</h3>
+            <small>THC, B/L &amp; bongkar muat</small>
+          </div>
+        </div>
+        <span class="card-tag">ADV</span>
+      </div>
+      <div class="field"><label>Terminal Handling Charge / THC (Rp)</label><input type="number" id="thc" placeholder="0" min="0"></div>
+      <div class="field"><label>Biaya Dokumen B/L (Rp)</label><input type="number" id="bl" placeholder="0" min="0"></div>
+      <div class="field"><label>Kuli / Bongkar Muat (Rp)</label><input type="number" id="kuli" placeholder="0" min="0"></div>
+    </div>
+
+    <div class="card advance-only">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn green">🎯</div>
+          <div>
+            <h3>Data Pallet (Ti-Hi)</h3>
+            <small>Dimensi maksimal pallet standar</small>
+          </div>
+        </div>
+        <span class="card-tag">ADV</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>P Max (cm)</label><input type="number" id="palP" placeholder="120" min="0"></div>
+        <div class="field"><label>L Max (cm)</label><input type="number" id="palL" placeholder="100" min="0"></div>
+        <div class="field"><label>T Max (cm)</label><input type="number" id="palT" placeholder="150" min="0"></div>
+      </div>
+      <div class="hint">💡 Untuk perhitungan Ti-Hi tanpa overhang</div>
+    </div>
+
+    <div class="card advance-only">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="icn">⏱️</div>
+          <div>
+            <h3>Waktu &amp; Kedaluwarsa</h3>
+            <small>Lead time vs umur simpan</small>
+          </div>
+        </div>
+        <span class="card-tag">ADV</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Lead Time (Hari)</label><input type="number" id="lead" placeholder="0" min="0"></div>
+        <div class="field"><label>Umur Simpan (Hari)</label><input type="number" id="shelf" placeholder="0" min="0"></div>
+      </div>
+      <div class="hint">💡 Peringatan muncul jika Lead Time &gt; 30% Umur Simpan</div>
+    </div>
+
+  </div>
+
+  <button class="btn-calc" onclick="calculate()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+    <span>Hitung Landed Cost Sekarang</span>
+    <span class="kbd">⏎</span>
+  </button>
+
+  <!-- OUTPUT -->
+  <section class="output-section">
+    <div class="output-header">
+      <h2><span class="bar"></span>Dashboard Hasil Analisis</h2>
+      <span class="meta" id="outputMeta">Menunggu input data...</span>
+    </div>
+    <div id="outputContent">
+      <div class="empty-state">
+        <div class="big-icon">📊</div>
+        <h3>Siap Menganalisis Efisiensi Anda</h3>
+        <p>Isi data di atas lalu klik <strong>Hitung Landed Cost</strong> untuk melihat 3 skenario optimasi biaya logistik.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="brand-mini">
+    <span class="mini-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      </svg>
+    </span>
+    <span>SASAGU</span>
+  </div>
+  <div>© 2026 SASAGU Logistics Cost Engine — Smart calculation for smarter business.</div>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const fmt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+const fmtNum = n => Math.round(n).toLocaleString('id-ID');
+
+// Toggle mode
+$('modeToggle').addEventListener('change', e => {
+  const on = e.target.checked;
+  document.querySelectorAll('.advance-only').forEach(el => el.classList.toggle('show', on));
+  $('modeTitle').textContent = on ? 'Mode Advance — Manufaktur' : 'Mode Basic — UMKM';
+  $('modeSub').textContent = on ? 'Perhitungan lengkap dengan faktor manufaktur & pallet' : 'Perhitungan dasar untuk UMKM & reseller';
+  $('modeIcn').textContent = on ? '🏭' : '🏪';
+  $('modeIcn').classList.toggle('advance', on);
+});
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)) calculate();
+});
+
+function calculate(){
+  const divisor = parseFloat($('shipMode').value);
+  const pricePerKg = num('pricePerKg');
+  const minWeight = num('minWeight');
+
+  const uP=num('uP'), uL=num('uL'), uT=num('uT'), uW=num('uW');
+  const hasUnit = (uP>0 && uL>0 && uT>0 && uW>0);
+
+  const bP=num('bP'), bL=num('bL'), bT=num('bT'), bCap=num('bCap');
+  const hasBox = (bP>0 && bL>0 && bT>0 && bCap>0);
+
+  if(!hasUnit && !hasBox){
+    $('outputContent').innerHTML = `<div class="alert danger">⚠️ <strong>Data belum lengkap.</strong> Harap isi minimal Data Produk Satuan ATAU Data Master Box untuk memulai perhitungan.</div>`;
+    return;
+  }
+  if(pricePerKg<=0 || minWeight<=0){
+    $('outputContent').innerHTML = `<div class="alert danger">⚠️ <strong>Harga per Kg dan Minimal Berat wajib diisi</strong> untuk menghitung ongkir.</div>`;
+    return;
+  }
+
+  const cPack=num('cPack'), cLocal1=num('cLocal1'), cIns=num('cIns'), cLocal2=num('cLocal2'), cWood=num('cWood'), wWood=num('wWood');
+
+  const isAdv = $('modeToggle').checked;
+  const shrink = num('shrink');
+  const thc=num('thc'), bl=num('bl'), kuli=num('kuli');
+  const palP=num('palP'), palL=num('palL'), palT=num('palT');
+  const lead=num('lead'), shelf=num('shelf');
+
+  const volUnit = (uP*uL*uT)/divisor;
+  const volBox = (bP*bL*bT)/divisor;
+
+  const cwUnit = hasUnit ? Math.max(uW, volUnit) : 0;
+
+  // S1
+  let s1Pcs=0, s1Weight=0, s1Cost=0;
+  if(hasUnit){
+    s1Pcs = Math.ceil(minWeight / cwUnit);
+    s1Weight = s1Pcs * cwUnit;
+    s1Cost = s1Weight * pricePerKg;
+  }
+
+  // S2
+  let s2Boxes=0, s2Pcs=0, s2Weight=0, s2Cost=0;
+  if(hasBox){
+    let cwPerBox = hasUnit ? Math.max(bCap * uW, volBox) : volBox;
+    s2Boxes = Math.ceil(minWeight / cwPerBox);
+    s2Pcs = s2Boxes * bCap;
+    s2Weight = s2Boxes * cwPerBox;
+    s2Cost = s2Weight * pricePerKg;
+  } else if(hasUnit){
+    s2Pcs = s1Pcs; s2Weight = s1Weight; s2Cost = s1Cost;
+  }
+
+  let useScenario = 2;
+  let bestPcs, bestWeight, bestCost;
+  if(hasUnit && hasBox){
+    const costPerPcs1 = s1Cost / s1Pcs;
+    const costPerPcs2 = s2Cost / s2Pcs;
+    if(costPerPcs1 < costPerPcs2){
+      useScenario = 1;
+      bestPcs = s1Pcs; bestWeight = s1Weight; bestCost = s1Cost;
+    } else {
+      useScenario = 2;
+      bestPcs = s2Pcs; bestWeight = s2Weight; bestCost = s2Cost;
+    }
+  } else if(hasUnit){
+    bestPcs = s1Pcs; bestWeight = s1Weight; bestCost = s1Cost;
+  } else {
+    bestPcs = s2Pcs; bestWeight = s2Weight; bestCost = s2Cost;
+  }
+
+  const totalAddCost = cPack + cLocal1 + cIns + cLocal2 + cWood;
+  const finalWeight = bestWeight + wWood;
+  const finalShippingCost = finalWeight * pricePerKg;
+  const totalPortCost = thc + bl + kuli;
+
+  let unitCost = 0;
+  let totalAllCost = finalShippingCost + totalAddCost;
+  if(isAdv){
+    totalAllCost += totalPortCost;
+    const effectivePcs = bestPcs * (1 - shrink/100);
+    unitCost = effectivePcs > 0 ? totalAllCost / effectivePcs : 0;
+  } else {
+    unitCost = bestPcs > 0 ? totalAllCost / bestPcs : 0;
+  }
+
+  let palletInfo = '';
+  if(isAdv && hasBox && palP>0 && palL>0 && palT>0){
+    const ti = Math.floor(palP / bP) * Math.floor(palL / bL);
+    const hi = Math.floor(palT / bT);
+    const boxesPerPallet = ti * hi;
+    const palletUtilP = ((Math.floor(palP/bP)*bP)/palP*100).toFixed(1);
+    const palletUtilL = ((Math.floor(palL/bL)*bL)/palL*100).toFixed(1);
+    const palletUtilT = ((hi*bT)/palT*100).toFixed(1);
+    palletInfo = `
+      <div style="margin-top:18px;padding:16px;border-radius:14px;background:rgba(6,182,212,0.05);border:1px solid rgba(6,182,212,0.2)">
+        <div style="font-size:.78rem;font-weight:700;color:#67e8f9;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <span>🎯</span> Efisiensi Pallet (Ti-Hi)
+        </div>
+        <div class="result-grid">
+          <div class="result-item"><div class="lbl">Ti (per layer)</div><div class="val">${ti} box</div></div>
+          <div class="result-item"><div class="lbl">Hi (layer)</div><div class="val">${hi} layer</div></div>
+          <div class="result-item"><div class="lbl">Box / Pallet</div><div class="val big">${boxesPerPallet}</div></div>
+          <div class="result-item"><div class="lbl">Utilisasi P</div><div class="val">${palletUtilP}%</div></div>
+          <div class="result-item"><div class="lbl">Utilisasi L</div><div class="val">${palletUtilL}%</div></div>
+          <div class="result-item"><div class="lbl">Utilisasi T</div><div class="val">${palletUtilT}%</div></div>
+        </div>
+      </div>`;
+    if(boxesPerPallet===0) palletInfo = `<div class="alert warning">⚠️ Dimensi Master Box melebihi ukuran Pallet. Tidak dapat dimuat tanpa overhang.</div>`;
+  }
+
+  let shrinkWarn = '';
+  if(isAdv && lead>0 && shelf>0){
+    const threshold = 0.3 * shelf;
+    if(lead > threshold){
+      shrinkWarn = `<div class="alert danger"><strong>🚨 PERINGATAN BAHAYA:</strong> Lead Time (${lead} hari) melebihi 30% Umur Simpan (${shelf} hari = ${threshold.toFixed(1)} hari). Risiko penolakan distributor sangat tinggi! Pertimbangkan pengiriman udara atau percepat proses.</div>`;
+    } else {
+      shrinkWarn = `<div class="alert success">✅ Lead Time (${lead} hari) aman — di bawah 30% Umur Simpan (${shelf} hari).</div>`;
+    }
+  }
+
+  let html = '';
+
+  // S1
+  html += `<div class="scenario s1">
+    <div class="scenario-head">
+      <div class="scenario-title">
+        <div class="scenario-num">01</div>
+        <div>
+          <h4>Skenario Teoretis Tanpa Box</h4>
+          <small>Produk telanjang untuk mencapai batas minimal ongkir</small>
+        </div>
+      </div>
+      <span class="badge cyan">Tanpa Box</span>
+    </div>
+    ${hasUnit ? `
+      <div class="result-grid">
+        <div class="result-item"><div class="lbl">Berat Volumetrik /pcs</div><div class="val">${volUnit.toFixed(3)} kg</div></div>
+        <div class="result-item"><div class="lbl">Chargeable Weight /pcs</div><div class="val">${cwUnit.toFixed(3)} kg</div></div>
+        <div class="result-item"><div class="lbl">Pcs untuk Min. Ongkir</div><div class="val big">${fmtNum(s1Pcs)} pcs</div></div>
+        <div class="result-item"><div class="lbl">Total Berat</div><div class="val">${s1Weight.toFixed(2)} kg</div></div>
+        <div class="result-item"><div class="lbl">Total Ongkir</div><div class="val big">${fmt(s1Cost)}</div></div>
+        <div class="result-item"><div class="lbl">Ongkir / Pcs</div><div class="val">${fmt(s1Cost/s1Pcs)}</div></div>
+      </div>
+    ` : `<div class="alert info">ℹ️ Data Produk Satuan belum diisi — skenario ini tidak dapat dihitung.</div>`}
+  </div>`;
+
+  // S2
+  html += `<div class="scenario s2">
+    <div class="scenario-head">
+      <div class="scenario-title">
+        <div class="scenario-num">02</div>
+        <div>
+          <h4>Skenario Efisiensi Master Box</h4>
+          <small>Jumlah box untuk memenuhi batas minimal ongkir</small>
+        </div>
+      </div>
+      <span class="badge green">Master Box</span>
+    </div>
+    ${hasBox ? `
+      <div class="result-grid">
+        <div class="result-item"><div class="lbl">Berat Volumetrik /Box</div><div class="val">${volBox.toFixed(3)} kg</div></div>
+        <div class="result-item"><div class="lbl">Chargeable Weight /Box</div><div class="val">${(hasUnit?Math.max(bCap*uW,volBox):volBox).toFixed(3)} kg</div></div>
+        <div class="result-item"><div class="lbl">Box untuk Min. Ongkir</div><div class="val big">${fmtNum(s2Boxes)} box</div></div>
+        <div class="result-item"><div class="lbl">Total Pcs</div><div class="val big">${fmtNum(s2Pcs)} pcs</div></div>
+        <div class="result-item"><div class="lbl">Total Berat</div><div class="val">${s2Weight.toFixed(2)} kg</div></div>
+        <div class="result-item"><div class="lbl">Total Ongkir</div><div class="val big">${fmt(s2Cost)}</div></div>
+        <div class="result-item"><div class="lbl">Ongkir / Pcs</div><div class="val">${fmt(s2Cost/s2Pcs)}</div></div>
+      </div>
+    ` : `<div class="alert info">ℹ️ Data Master Box belum diisi — menggunakan perhitungan per satuan produk.</div>`}
+  </div>`;
+
+  // Recommendation
+  let recHtml = '';
+  if(hasUnit && hasBox){
+    const c1 = s1Cost/s1Pcs, c2 = s2Cost/s2Pcs;
+    const winner = useScenario===1 ? 'Skenario 1 (Tanpa Box)' : 'Skenario 2 (Master Box)';
+    recHtml = `<div class="alert ${useScenario===2?'success':'info'}">💡 <strong>Rekomendasi Efisiensi SASAGU:</strong> ${winner} lebih murah (${fmt(Math.min(c1,c2))}/pcs vs ${fmt(Math.max(c1,c2))}/pcs). Hemat ${fmt(Math.abs(c1-c2))} per pcs.</div>`;
+  }
+
+  // S3
+  html += `<div class="scenario s3">
+    <div class="scenario-head">
+      <div class="scenario-title">
+        <div class="scenario-num">03</div>
+        <div>
+          <h4>Landed Cost — Unit Cost per Pcs</h4>
+          <small>HPP final setelah semua biaya diperhitungkan</small>
+        </div>
+      </div>
+      <span class="badge amber">${isAdv?'ADVANCE':'BASIC'}</span>
+    </div>
+    ${recHtml}
+    <div class="result-grid">
+      <div class="result-item"><div class="lbl">Total Pcs Dikirim</div><div class="val big">${fmtNum(bestPcs)}</div></div>
+      <div class="result-item"><div class="lbl">Chargeable Weight Total</div><div class="val">${finalWeight.toFixed(2)} kg</div></div>
+      <div class="result-item"><div class="lbl">Total Ongkir</div><div class="val">${fmt(finalShippingCost)}</div></div>
+      <div class="result-item"><div class="lbl">Biaya Tambahan</div><div class="val">${fmt(totalAddCost)}</div></div>
+      ${isAdv ? `<div class="result-item"><div class="lbl">Biaya Pelabuhan</div><div class="val">${fmt(totalPortCost)}</div></div>` : ''}
+      <div class="result-item"><div class="lbl">Total Biaya</div><div class="val big">${fmt(totalAllCost)}</div></div>
+      ${isAdv ? `<div class="result-item"><div class="lbl">Pcs Efektif (after shrinkage)</div><div class="val">${fmtNum(bestPcs*(1-shrink/100))}</div></div>` : ''}
+      <div class="result-item highlight">
+        <div class="lbl">⭐ Unit Cost (HPP)</div>
+        <div class="val">${fmt(unitCost)}</div>
+      </div>
+    </div>
+    ${shrinkWarn}
+    ${palletInfo}
+  </div>`;
+
+  $('outputContent').innerHTML = html;
+  $('outputMeta').textContent = `Terakhir dihitung: ${new Date().toLocaleTimeString('id-ID')} · Mode ${isAdv?'Advance':'Basic'} · ${divisor===4000?'Laut':'Udara'}`;
+  document.querySelector('.output-section').scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>
